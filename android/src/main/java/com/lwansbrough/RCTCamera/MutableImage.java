@@ -250,7 +250,7 @@ public class MutableImage {
             double longitude = coords.getDouble("longitude");
             long timestamp = (long)location.getDouble("timestamp");
 
-            GPS.writeExifData(latitude, longitude, timestamp, exif);
+            EXIF.writeData(latitude, longitude, timestamp, exif);
         } catch (IOException e) {
             Log.e(TAG, "Couldn't write location data", e);
         }
@@ -291,15 +291,16 @@ public class MutableImage {
         }
     }
 
-    private static class GPS {
-        public static void writeExifData(double latitude, double longitude, long timestamp, ExifInterface exif) throws IOException {
+    private static class EXIF {
+        public static void writeData(double latitude, double longitude, long timestamp, ExifInterface exif) throws IOException {
             exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(latitude));
             exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, latitudeRef(latitude));
             exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(longitude));
             exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, longitudeRef(longitude));
 
             exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP, new SimpleDateFormat("yyyy:MM:dd").format(new Date(timestamp)));
-            exif.setAttribute(ExifInterface.TAG_GPS_TIMESTAMP, new SimpleDateFormat("hh:mm:ss").format(new Date(timestamp)));
+            exif.setAttribute(ExifInterface.TAG_GPS_TIMESTAMP, new SimpleDateFormat("HH:mm:ss").format(new Date(timestamp)));
+            exif.setAttribute(ExifInterface.TAG_DATETIME, new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(new Date()));
         }
 
         private static String latitudeRef(double latitude) {
