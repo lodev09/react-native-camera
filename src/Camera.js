@@ -364,7 +364,7 @@ export default class Camera extends Component {
     if (Platform.OS === 'android') {
       UIManager.dispatchViewManagerCommand(
         this._cameraHandle,
-        UIManager.RCTCamera.Commands.startPreview,
+        UIManager.getViewManagerConfig('RCTCamera').Commands.startPreview,
         [],
       );
     } else {
@@ -376,7 +376,7 @@ export default class Camera extends Component {
     if (Platform.OS === 'android') {
       UIManager.dispatchViewManagerCommand(
         this._cameraHandle,
-        UIManager.RCTCamera.Commands.stopPreview,
+        UIManager.getViewManagerConfig('RCTCamera').Commands.stopPreview,
         [],
       );
     } else {
