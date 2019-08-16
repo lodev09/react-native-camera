@@ -16,6 +16,8 @@ import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.facebook.react.bridge.ReadableMap;
 
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -191,8 +193,9 @@ public class MutableImage {
             ReadableMap coords = location.getMap("coords");
             double latitude = coords.getDouble("latitude");
             double longitude = coords.getDouble("longitude");
+            long timestamp = (long)location.getDouble("timestamp");
 
-            GPS.writeExifData(latitude, longitude, exif);
+            EXIF.writeData(latitude, longitude, timestamp, exif);
         } catch (IOException e) {
             Log.e(TAG, "Couldn't write location data", e);
         }
@@ -233,12 +236,16 @@ public class MutableImage {
         }
     }
 
-    private static class GPS {
-        public static void writeExifData(double latitude, double longitude, ExifInterface exif) throws IOException {
-            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, toDegreeMinuteSecods(latitude));
+    private static class EXIF {
+        public static void writeData(double latitude, double longitude, long timestamp, ExifInterface exif) throws IOException {
+            exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(latitude));
             exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, latitudeRef(latitude));
-            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, toDegreeMinuteSecods(longitude));
+            exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(longitude));
             exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, longitudeRef(longitude));
+
+            exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP, new SimpleDateFormat("yyyy:MM:dd").format(new Date(timestamp)));
+            exif.setAttribute(ExifInterface.TAG_GPS_TIMESTAMP, new SimpleDateFormat("HH:mm:ss").format(new Date(timestamp)));
+            exif.setAttribute(ExifInterface.TAG_DATETIME, new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(new Date()));
         }
 
         private static String latitudeRef(double latitude) {
@@ -249,24 +256,14 @@ public class MutableImage {
             return longitude < 0.0d ? "W" : "E";
         }
 
-        private static String toDegreeMinuteSecods(double latitude) {
-            latitude = Math.abs(latitude);
-            int degree = (int) latitude;
-            latitude *= 60;
-            latitude -= (degree * 60.0d);
-            int minute = (int) latitude;
-            latitude *= 60;
-            latitude -= (minute * 60.0d);
-            int second = (int) (latitude * 1000.0d);
-
-            StringBuffer sb = new StringBuffer();
-            sb.append(degree);
-            sb.append("/1,");
-            sb.append(minute);
-            sb.append("/1,");
-            sb.append(second);
-            sb.append("/1000,");
-            return sb.toString();
+        private static String dec2DMS(double coord) {
+            coord = coord > 0 ? coord : -coord;  
+            String sOut = Integer.toString((int)coord) + "/1,";   
+            coord = (coord % 1) * 60;         
+            sOut = sOut + Integer.toString((int)coord) + "/1,";   
+            coord = (coord % 1) * 60000;             
+            sOut = sOut + Integer.toString((int)coord) + "/1000";   
+            return sOut;
         }
     }
 }
